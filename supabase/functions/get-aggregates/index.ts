@@ -12,6 +12,8 @@ Deno.serve(async (req) => {
   const url    = new URL(req.url);
   const period = url.searchParams.get("period")   ?? "ALL";
   const month  = url.searchParams.get("month")    ?? null;
+  const from   = url.searchParams.get("from")     ?? null;
+  const to     = url.searchParams.get("to")       ?? null;
   const emp    = url.searchParams.get("employee") ?? "ALL";
   const proj   = url.searchParams.get("project")  ?? "ALL";
   const bill   = url.searchParams.get("billable") ?? null;
@@ -49,6 +51,9 @@ Deno.serve(async (req) => {
     const start  = `${month}-01`;
     const end    = new Date(y, m, 1).toISOString().split("T")[0];
     query = query.gte("date", start).lt("date", end);
+  } else if (period === "RANGE") {
+    if (from) query = query.gte("date", from);
+    if (to)   query = query.lte("date", to);
   }
 
   if (emp  !== "ALL") query = query.eq("employee", emp);
@@ -170,7 +175,7 @@ Deno.serve(async (req) => {
       employees,
       projects,
       tasks,
-      _filters: { period, month, employee: emp, project: proj, billable: bill },
+      _filters: { period, month, from, to, employee: emp, project: proj, billable: bill },
     }),
     { headers: { ...cors, "Content-Type": "application/json" } }
   );

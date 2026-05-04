@@ -285,6 +285,34 @@ header {
   box-shadow: 0 0 0 3px rgba(99,102,241,.15);
 }
 
+.filter-bar input[type="date"] {
+  height: 32px;
+  padding: 0 8px;
+  background: var(--sf2);
+  color: var(--tx);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.filter-bar input[type="date"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+}
+.filter-bar input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
+}
+#global-range-wrap {
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
 #global-month {
   color: var(--accent);
   border-color: var(--accent);
@@ -431,12 +459,11 @@ main {
 ═══════════════════════════════════════════ */
 .ks {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 14px;
   margin-bottom: 18px;
 }
 
-@media (max-width: 1100px) { .ks { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px)  { .ks { grid-template-columns: 1fr; } }
 
 .kc {
@@ -571,6 +598,28 @@ main {
 ═══════════════════════════════════════════ */
 .cw    { height: 240px; position: relative; }
 .cw-sm { height: 200px; position: relative; }
+
+/* ═══════════════════════════════════════════
+   EXPANDABLE TABLE ROWS
+═══════════════════════════════════════════ */
+.row-toggle {
+  display: inline-block;
+  transition: transform .2s ease;
+  font-size: 10px;
+  margin-right: 4px;
+  color: var(--muted);
+  vertical-align: middle;
+  user-select: none;
+}
+.proj-row td:nth-child(2) { cursor: pointer; }
+.proj-row td:nth-child(2):hover .pname { color: var(--accent); text-decoration: underline; }
+.task-child-row { background: var(--bg2) !important; }
+.task-child-row td:nth-child(2) { cursor: pointer; }
+.task-child-row td:nth-child(2):hover { color: var(--accent); }
+.desc-child-row { background: var(--sf2) !important; }
+.proj-grp-hdr { background: var(--bg2) !important; cursor: pointer; }
+.proj-grp-hdr:hover td { opacity: .85; }
+.tasks-entry-row td:first-child { padding-left: 22px; }
 
 /* ═══════════════════════════════════════════
    GRID LAYOUTS
@@ -1063,8 +1112,16 @@ footer strong { color: var(--muted); font-weight: 600; }
     <option value="3M">Last 3 months</option>
     <option value="6M">Last 6 months</option>
     <option value="MONTH">Specific month</option>
+    <option value="RANGE">Date range</option>
   </select>
   <select id="global-month" style="display:none;" aria-label="Select month"></select>
+  <div id="global-range-wrap" style="display:none;" aria-label="Date range inputs">
+    <span class="filter-label">From:</span>
+    <input type="date" id="global-from" aria-label="From date" />
+    <span class="filter-label">To:</span>
+    <input type="date" id="global-to" aria-label="To date" />
+    <span id="range-err" style="display:none;color:#f43f5e;font-size:11px;font-weight:600;">Select both dates</span>
+  </div>
 
   <span class="filter-label">Employee:</span>
   <select id="global-employee">
@@ -1076,9 +1133,11 @@ footer strong { color: var(--muted); font-weight: 600; }
     <option value="ALL">All projects</option>
   </select>
 
+  <!-- BILLABLE FILTER — hidden, uncomment to restore
   <label class="billable-label">
     <input id="global-billable" type="checkbox" /> Billable only
   </label>
+  -->
 
   <div class="filter-actions">
     <button id="global-apply" class="btn-apply">Apply</button>
@@ -1111,6 +1170,7 @@ footer strong { color: var(--muted); font-weight: 600; }
           <div class="kc-icon"><i data-lucide="clock"></i></div>
         </div>
       </div>
+      <!-- BILLABLE HOURS KPI CARD — hidden, uncomment to restore
       <div class="kc p">
         <div class="kc-bar"></div>
         <div class="kc-top">
@@ -1122,13 +1182,14 @@ footer strong { color: var(--muted); font-weight: 600; }
           <div class="kc-icon"><i data-lucide="briefcase"></i></div>
         </div>
       </div>
+      -->
       <div class="kc pk">
         <div class="kc-bar"></div>
         <div class="kc-top">
           <div>
             <div class="kl">Leave + Holiday</div>
             <div id="kpi-leave-hours" class="kv">143</div>
-            <div class="ks2">hrs non-billable absence</div>
+            <div class="ks2">hrs absence</div>
           </div>
           <div class="kc-icon"><i data-lucide="umbrella"></i></div>
         </div>
@@ -1146,36 +1207,38 @@ footer strong { color: var(--muted); font-weight: 600; }
       </div>
     </div>
 
-    <!-- Charts row 1 -->
-    <div class="g64">
+    <!-- Charts row 1 — Project Distribution + Employee Hours -->
+    <div class="g2">
+      <!-- PROJECTS BY BILLABLE HRS CHART — hidden, uncomment to restore
       <div class="pn">
         <div class="pt"><span class="ptd" style="background:var(--teal)"></span>Projects by Billable Hours</div>
         <div class="cw"><canvas id="ov-pb"></canvas></div>
       </div>
+      -->
       <div class="pn">
         <div class="pt"><span class="ptd" style="background:var(--accent)"></span>Project Distribution</div>
         <div class="cw"><canvas id="ov-pd"></canvas></div>
       </div>
-    </div>
-
-    <!-- Charts row 2 -->
-    <div class="g2">
       <div class="pn">
-        <div class="pt"><span class="ptd" style="background:var(--accent-3)"></span>Employee Hours — Total vs Billable vs Leave</div>
+        <div class="pt"><span class="ptd" style="background:var(--accent-3)"></span>Employee Hours — Total vs Leave</div>
         <div class="cw"><canvas id="ov-eg"></canvas></div>
       </div>
+      <!-- INDIVIDUAL BILLABILITY CHART — hidden, uncomment to restore
       <div class="pn">
         <div class="pt"><span class="ptd" style="background:var(--orange)"></span>Individual Billability Rate</div>
         <div class="cw"><canvas id="ov-bl"></canvas></div>
       </div>
+      -->
     </div>
 
-    <!-- Charts row 3 -->
-    <div class="g3">
+    <!-- Charts row 2 — Employee Ranking + Tasks per Employee -->
+    <div class="g2">
+      <!-- TEAM HOURS SPLIT CHART — hidden, uncomment to restore
       <div class="pn">
         <div class="pt"><span class="ptd" style="background:var(--amber)"></span>Team Hours Split</div>
         <div class="cw-sm"><canvas id="ov-sd"></canvas></div>
       </div>
+      -->
       <div class="pn">
         <div class="pt"><span class="ptd" style="background:var(--emerald)"></span>Employee Ranking</div>
         <div class="cw-sm"><canvas id="ov-er"></canvas></div>
@@ -1202,6 +1265,7 @@ footer strong { color: var(--muted); font-weight: 600; }
           <div class="kc-icon"><i data-lucide="layout-list"></i></div>
         </div>
       </div>
+      <!-- PROJECTS BILLABLE HRS KPI — hidden, uncomment to restore
       <div class="kc p">
         <div class="kc-bar"></div>
         <div class="kc-top">
@@ -1213,6 +1277,7 @@ footer strong { color: var(--muted); font-weight: 600; }
           <div class="kc-icon"><i data-lucide="hourglass"></i></div>
         </div>
       </div>
+      -->
       <div class="kc pk">
         <div class="kc-bar"></div>
         <div class="kc-top">
@@ -1246,7 +1311,9 @@ footer strong { color: var(--muted); font-weight: 600; }
       <div class="dm">
         <div class="mi"><label>Total Hrs</label><span id="ddp-hrs" style="color:var(--teal)">—</span></div>
         <div class="mi"><label>Tasks</label><span id="ddp-tk">—</span></div>
+        <!-- PROJECT % BILLABLE STAT — hidden, uncomment to restore
         <div class="mi"><label>% Billable</label><span id="ddp-pct" style="color:var(--accent)">—</span></div>
+        -->
         <div class="mi"><label>Avg Hrs/Task</label><span id="ddp-avg">—</span></div>
         <div class="mi"><label>Employees</label><span id="ddp-emp" style="color:var(--orange)">—</span></div>
       </div>
@@ -1276,7 +1343,7 @@ footer strong { color: var(--muted); font-weight: 600; }
     </div>
 
     <div class="pn">
-      <div class="pt"><span class="ptd" style="background:var(--teal)"></span>All Projects — Click to drill down</div>
+      <div class="pt"><span class="ptd" style="background:var(--teal)"></span>All Projects — Click project to expand tasks · Click task to expand details</div>
       <input class="sr" type="text" placeholder="🔍  Search projects…" oninput="fp(this.value)" aria-label="Search projects" />
       <div class="stb" style="max-height:490px;">
         <table class="tb" style="table-layout:fixed;">
@@ -1288,12 +1355,12 @@ footer strong { color: var(--muted); font-weight: 600; }
             <col style="width:90px">
             <col style="width:90px">
             <col style="width:100px">
-            <col style="width:92px">
+            <!-- BILLABLE COL — hidden, uncomment to restore: <col style="width:92px"> -->
           </colgroup>
           <thead><tr>
             <th>#</th><th class="cell-name">Project</th>
             <th class="nr">Total Hrs</th><th class="nr">Tasks</th>
-            <th class="nr">% Billable</th><th class="nr">Employees</th>
+            <th class="nr">Employees</th>
             <th class="nr">Avg Hrs/Task</th><th>Share</th>
           </tr></thead>
           <tbody id="ptb"></tbody>
@@ -1316,6 +1383,7 @@ footer strong { color: var(--muted); font-weight: 600; }
           <div class="kc-icon"><i data-lucide="users"></i></div>
         </div>
       </div>
+      <!-- EMPLOYEES TEAM BILLABILITY KPI — hidden, uncomment to restore
       <div class="kc p">
         <div class="kc-bar"></div>
         <div class="kc-top">
@@ -1327,6 +1395,7 @@ footer strong { color: var(--muted); font-weight: 600; }
           <div class="kc-icon"><i data-lucide="trending-up"></i></div>
         </div>
       </div>
+      -->
       <div class="kc pk">
         <div class="kc-bar"></div>
         <div class="kc-top">
@@ -1351,8 +1420,9 @@ footer strong { color: var(--muted); font-weight: 600; }
       </div>
     </div>
 
-    <!-- Team changes (populated from /api/staff-config) -->
+    <!-- NEW JOININGS / RESIGNED CARDS — hidden, uncomment to restore
     <div class="emp-changes" id="emp-changes-grid"></div>
+    -->
 
     <!-- Employee drilldown -->
     <div class="dd" id="dd-emp">
@@ -1362,9 +1432,13 @@ footer strong { color: var(--muted); font-weight: 600; }
       </div>
       <div class="dm">
         <div class="mi"><label>Total Hrs</label><span id="dde-tot" style="color:var(--teal)">—</span></div>
+        <!-- EMPLOYEE BILLABLE STAT — hidden, uncomment to restore
         <div class="mi"><label>Billable</label><span id="dde-bl" style="color:var(--accent)">—</span></div>
+        -->
         <div class="mi"><label>Leave/Holiday</label><span id="dde-lv" style="color:var(--accent-3)">—</span></div>
+        <!-- EMPLOYEE BILLABILITY STAT — hidden, uncomment to restore
         <div class="mi"><label>Billability</label><span id="dde-pct" style="color:var(--orange)">—</span></div>
+        -->
         <div class="mi"><label>Projects</label><span id="dde-pr">—</span></div>
         <div class="mi"><label>Tasks</label><span id="dde-tk">—</span></div>
       </div>
@@ -1374,13 +1448,12 @@ footer strong { color: var(--muted); font-weight: 600; }
           <div class="stb" style="max-height:260px;">
             <table class="tb" id="dde-pt" style="table-layout:fixed;">
               <colgroup>
-                <col style="width:22%">
-                <col style="width:20%">
+                <col style="width:40%">
                 <col>
                 <col style="width:60px">
               </colgroup>
               <thead><tr>
-                <th class="cell-name">Project</th><th class="cell-name">Task</th><th class="cell-desc">Description</th><th class="nr">Hrs</th>
+                <th class="cell-name">Task</th><th class="cell-desc">Description</th><th class="nr">Hrs</th>
               </tr></thead>
               <tbody></tbody>
             </table>
@@ -1397,7 +1470,9 @@ footer strong { color: var(--muted); font-weight: 600; }
       <div class="pt">
         <span class="ptd" style="background:var(--accent)"></span>
         Employee Summary — Click to drill down
+        <!-- NEW JOINING LEGEND — hidden, uncomment to restore
         &nbsp;<span style="font-size:10px; color:var(--emerald); font-weight:500;">★ = New Joining</span>
+        -->
       </div>
       <table class="tb" style="table-layout:fixed;">
         <colgroup>
@@ -1408,13 +1483,15 @@ footer strong { color: var(--muted); font-weight: 600; }
           <col style="width:84px">
           <col style="width:68px">
           <col style="width:60px">
+          <!-- BILLABLE COLS — hidden, uncomment to restore:
           <col style="width:68px">
           <col style="width:92px">
+          -->
         </colgroup>
         <thead><tr>
           <th class="cell-name">Employee</th>
-          <th class="nr">Total Hrs</th><th class="nr">Billable</th>
-          <th class="nr">Leave/Holiday</th><th class="nr">Billability</th>
+          <th class="nr">Total Hrs</th>
+          <th class="nr">Leave/Holiday</th>
           <th class="nr">Projects</th><th class="nr">Tasks</th>
           <th class="nr">Team %</th><th>Bar</th>
         </tr></thead>
@@ -1432,7 +1509,7 @@ footer strong { color: var(--muted); font-weight: 600; }
           <div>
             <div class="kl">Total Tasks</div>
             <div class="kv" id="tasks-kpi-count">104</div>
-            <div class="ks2">billable entries</div>
+            <div class="ks2">total entries</div>
           </div>
           <div class="kc-icon"><i data-lucide="check-circle-2"></i></div>
         </div>
@@ -1493,14 +1570,13 @@ footer strong { color: var(--muted); font-weight: 600; }
       <div class="stb" style="max-height:510px;">
         <table class="tb" style="table-layout:fixed;">
           <colgroup>
-            <col style="width:20%">
-            <col style="width:18%">
+            <col style="width:22%">
             <col>
             <col style="width:64px">
             <col style="width:110px">
           </colgroup>
           <thead><tr>
-            <th class="cell-name">Project</th><th class="cell-name">Task</th><th class="cell-desc">Description</th>
+            <th class="cell-name">Task</th><th class="cell-desc">Description</th>
             <th class="nr">Hrs</th><th>Employee</th>
           </tr></thead>
           <tbody id="ttb"></tbody>
@@ -1567,7 +1643,7 @@ footer strong { color: var(--muted); font-weight: 600; }
 
 <!-- ══════════════════════════ DASHBOARD DATA & CHART LOGIC ══════════════════════════ -->
 <script>
-  const API = "https://deppuufhjctbusypehvy.supabase.co/functions/v1";
+  const API = "https://ltaylviwsmuupjrmonhz.supabase.co/functions/v1";
   let employees = [
     { no: 1,  name: "Abhishek Jain",     short: "Abhishek J.",  total: 61.25, bill: 42.25, leave: 17.0, billPct: 0.6898, projects: 8,  tasks: 11, teamPct: 0.1139 },
     { no: 2,  name: "Ashutosh Kumbhkar", short: "Ashutosh K.",  total: 52.17, bill: 24.17, leave: 25.0, billPct: 0.4633, projects: 5,  tasks: 6,  teamPct: 0.097  },
@@ -1598,6 +1674,8 @@ footer strong { color: var(--muted); font-weight: 600; }
   const SVG_USER_PLUS  = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`;
   const SVG_USER_MINUS = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`;
 
+  // NEW JOININGS / RESIGNED CARDS — hidden, uncomment to restore
+  /*
   function renderEmpChanges() {
     const grid = document.getElementById('emp-changes-grid');
     if (!grid) return;
@@ -1630,6 +1708,8 @@ footer strong { color: var(--muted); font-weight: 600; }
       grid.style.display = 'none';
     }
   }
+  */
+  function renderEmpChanges() { /* hidden — uncomment block above to restore */ }
 
   // ── chart defaults helper ──────────────────────────────────────────────
   function isDark() {
@@ -1698,21 +1778,26 @@ footer strong { color: var(--muted); font-weight: 600; }
       ? lastAggregates.kpi.leave_hours
       : employees.reduce((s, e) => s + (Number(e.leave) || 0), 0);
     document.getElementById('kpi-total-hours').textContent    = total.toFixed(2);
-    document.getElementById('kpi-billable-hours').textContent = (bill||0).toFixed(2);
+    // BILLABLE KPI — hidden, uncomment when billable card is restored
+    // document.getElementById('kpi-billable-hours').textContent = (bill||0).toFixed(2);
     document.getElementById('kpi-projects-active').textContent = projectsCount;
     document.getElementById('kpi-leave-hours').textContent    = leaveHours.toFixed(2);
     document.getElementById('kpi-team-desc').textContent      = `${employees.length||0} employees`;
     const pct = total ? ((bill/total)*100).toFixed(1)+'%' : '0%';
-    document.getElementById('kpi-bill-desc').textContent      = `${pct} team billability`;
+    // document.getElementById('kpi-bill-desc').textContent      = `${pct} team billability`;
     document.getElementById('kpi-project-avg').textContent    = `Avg ${projectsCount ? (total/projectsCount).toFixed(1) : 0} hrs/project`;
 
     // ── formatPeriodLabel: turn raw filter values into readable strings ──
     function formatPeriodLabel(filters) {
       if (!filters) return 'All time';
-      const { period, month } = filters;
+      const { period, month, from, to } = filters;
       if (period === 'MONTH' && month) {
         const [y, m] = month.split('-').map(Number);
         return new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+      }
+      if (period === 'RANGE') {
+        const fmt = d => d ? new Date(d).toLocaleDateString(undefined, { day:'numeric', month:'short', year:'numeric' }) : '?';
+        return `${fmt(from)} → ${fmt(to)}`;
       }
       if (period === '3M') return 'Last 3 months';
       if (period === '6M') return 'Last 6 months';
@@ -1773,26 +1858,114 @@ footer strong { color: var(--muted); font-weight: 600; }
     } catch(e) { console.warn('initOv banner failed', e); }
   }
 
-  // ── rpt: Projects table ───────────────────────────────────────────────
+  // ── rpt: Projects table (grouped + expandable) ───────────────────────
   function rpt() {
     const ptb = document.getElementById('ptb'); if (!ptb) return;
     ptb.innerHTML = '';
-    (projects||[]).forEach((p, idx) => {
+
+    // Build groups from taskData so duplicate project names are merged
+    const projMap = {};
+    (taskData||[]).forEach(t => {
+      const proj = t.proj||'Unknown';
+      if (!projMap[proj]) projMap[proj] = { hrs:0, tasks:{}, emps:new Set() };
+      projMap[proj].hrs += Number(t.hrs)||0;
+      if (t.employee) projMap[proj].emps.add(t.employee);
+      const tk = t.task||'—';
+      if (!projMap[proj].tasks[tk]) projMap[proj].tasks[tk] = { hrs:0, entries:[] };
+      projMap[proj].tasks[tk].hrs += Number(t.hrs)||0;
+      projMap[proj].tasks[tk].entries.push(t);
+    });
+
+    const list = Object.entries(projMap).sort((a,b)=>b[1].hrs-a[1].hrs);
+    const maxH = list.length ? list[0][1].hrs : 1;
+
+    list.forEach(([name, data], idx) => {
+      const tc = Object.keys(data.tasks).length;
+      const ec = data.emps.size;
       const tr = document.createElement('tr');
-      tr.className = 'cl';
-      const billPct = ((p.billPct||0)*100).toFixed(1);
-      const badgeCls = p.billPct >= .8 ? 'plg' : p.billPct >= .5 ? 'plb' : 'plo';
+      tr.className = 'cl proj-row';
+      tr.dataset.projOpen = '0';
       tr.innerHTML = `
-        <td style="color:var(--muted2);font-size:11px;">${p.no||idx+1}</td>
-        <td class="cell-name" style="font-weight:600;color:var(--tx);" title="${p.name}"><span class="pname">${p.name}</span></td>
-        <td class="nr" style="color:var(--tx2);">${(p.hrs||0).toFixed(2)}</td>
-        <td class="nr">${p.tasks||0}</td>
-        <td class="nr"><span class="pl ${badgeCls}">${billPct}%</span></td>
-        <td class="nr">${p.emps||0}</td>
-        <td class="nr">${(p.avgHrs||0).toFixed(2)}</td>
-        <td><div class="bw"><div class="bf" style="width:${Math.min((p.hrs||0)/Math.max(...(projects||[{hrs:1}]).map(x=>x.hrs||1))*100,100)}%;background:linear-gradient(90deg,#6366f1,#8b5cf6)"></div></div></td>
+        <td style="color:var(--muted2);font-size:11px;">${idx+1}</td>
+        <td class="cell-name" style="font-weight:600;color:var(--tx);" title="${name}">
+          <span class="row-toggle">▶</span><span class="pname">${name}</span>
+        </td>
+        <td class="nr" style="color:var(--tx2);">${data.hrs.toFixed(2)}</td>
+        <td class="nr">${tc}</td>
+        <td class="nr">${ec}</td>
+        <td class="nr">${tc?(data.hrs/tc).toFixed(2):'0.00'}</td>
+        <td><div class="bw"><div class="bf" style="width:${Math.min(data.hrs/maxH*100,100).toFixed(1)}%;background:linear-gradient(90deg,#6366f1,#8b5cf6)"></div></div></td>
       `;
+      tr.querySelector('td:nth-child(2)').addEventListener('click', () => _projToggle(tr, data.tasks));
       ptb.appendChild(tr);
+    });
+  }
+
+  function _projToggle(projTr, tasks) {
+    const isOpen = projTr.dataset.projOpen === '1';
+    const icon   = projTr.querySelector('.row-toggle');
+    // Remove all child rows until next proj-row
+    let nxt = projTr.nextElementSibling;
+    while (nxt && !nxt.classList.contains('proj-row')) {
+      const rm = nxt; nxt = nxt.nextElementSibling; rm.remove();
+    }
+    if (isOpen) {
+      projTr.dataset.projOpen = '0';
+      if (icon) icon.style.transform = '';
+      return;
+    }
+    projTr.dataset.projOpen = '1';
+    if (icon) icon.style.transform = 'rotate(90deg)';
+
+    const taskList = Object.entries(tasks).sort((a,b)=>b[1].hrs-a[1].hrs);
+    let ins = projTr;
+    taskList.forEach(([tname, tdata]) => {
+      const tr = document.createElement('tr');
+      tr.className = 'task-child-row';
+      tr.dataset.taskOpen = '0';
+      tr.innerHTML = `
+        <td></td>
+        <td style="padding-left:26px;font-size:12.5px;color:var(--tx2);cursor:pointer;">
+          <span class="row-toggle" style="font-size:9px;">▶</span>${tname}
+        </td>
+        <td class="nr" style="color:var(--muted);font-size:12px;">${tdata.hrs.toFixed(2)}</td>
+        <td class="nr" style="color:var(--muted2);font-size:11px;">${tdata.entries.length} entries</td>
+        <td colspan="3"></td>
+      `;
+      tr.querySelector('td:nth-child(2)').addEventListener('click', () => _taskToggle(tr, tdata.entries));
+      ins.insertAdjacentElement('afterend', tr);
+      ins = tr;
+    });
+  }
+
+  function _taskToggle(taskTr, entries) {
+    const isOpen = taskTr.dataset.taskOpen === '1';
+    const icon   = taskTr.querySelector('.row-toggle');
+    let nxt = taskTr.nextElementSibling;
+    while (nxt && nxt.classList.contains('desc-child-row')) {
+      const rm = nxt; nxt = nxt.nextElementSibling; rm.remove();
+    }
+    if (isOpen) {
+      taskTr.dataset.taskOpen = '0';
+      if (icon) icon.style.transform = '';
+      return;
+    }
+    taskTr.dataset.taskOpen = '1';
+    if (icon) icon.style.transform = 'rotate(90deg)';
+
+    let ins = taskTr;
+    entries.forEach(e => {
+      const tr = document.createElement('tr');
+      tr.className = 'desc-child-row';
+      tr.innerHTML = `
+        <td></td>
+        <td colspan="2" style="padding-left:48px;font-size:11.5px;color:var(--muted);" title="${e.desc||''}">${e.desc||'(no description)'}</td>
+        <td class="nr" style="font-size:11.5px;">${Number(e.hrs||0).toFixed(2)}</td>
+        <td style="font-size:11px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.employee||''}</td>
+        <td colspan="2" style="font-size:11px;color:var(--muted2);">${e.date||''}</td>
+      `;
+      ins.insertAdjacentElement('afterend', tr);
+      ins = tr;
     });
   }
 
@@ -1808,8 +1981,7 @@ footer strong { color: var(--muted); font-weight: 600; }
       const tr = document.createElement('tr');
       tr.className = 'cl' + (isNew ? ' new-emp' : '');
       if (isResigned) tr.style.opacity = '0.5';
-      const billPct = ((e.billPct||0)*100).toFixed(1);
-      const badgeCls = e.billPct >= .8 ? 'plg' : e.billPct >= .5 ? 'plb' : 'plo';
+      // BILLABLE VARS — hidden, uncomment to restore: const billPct = ((e.billPct||0)*100).toFixed(1); const badgeCls = e.billPct >= .8 ? 'plg' : e.billPct >= .5 ? 'plb' : 'plo';
       const colors = ['#6366f1','#8b5cf6','#ec4899','#0ea5e9','#10b981','#f59e0b','#f97316','#f43f5e','#06b6d4'];
       const c = colors[((e.no||1)-1) % colors.length];
       const nameBadge = isNew
@@ -1825,9 +1997,7 @@ footer strong { color: var(--muted); font-weight: 600; }
           </div>
         </td>
         <td class="nr">${(e.total||0).toFixed(2)}</td>
-        <td class="nr">${(e.bill||0).toFixed(2)}</td>
         <td class="nr">${(e.leave||0).toFixed(2)}</td>
-        <td class="nr"><span class="pl ${badgeCls}">${billPct}%</span></td>
         <td class="nr">${e.projects||0}</td>
         <td class="nr">${e.tasks||0}</td>
         <td class="nr">${((e.teamPct||0)*100).toFixed(1)}%</td>
@@ -1880,7 +2050,7 @@ footer strong { color: var(--muted); font-weight: 600; }
       });
     } catch(e) {}
 
-    // Employee hrs: total vs billable
+    // Employee hrs: total vs leave
     try {
       const em = employees||[];
       drawChart('ov-eg', {
@@ -1888,8 +2058,8 @@ footer strong { color: var(--muted); font-weight: 600; }
         data: {
           labels: em.map(e=>e.short||e.name),
           datasets: [
-            { label: 'Total',    data: em.map(e=>Number(e.total)||0), backgroundColor: '#6366f133', borderRadius: 4 },
-            { label: 'Billable', data: em.map(e=>Number(e.bill)||0),  backgroundColor: '#6366f1cc', borderRadius: 4 },
+            { label: 'Total', data: em.map(e=>Number(e.total)||0), backgroundColor: '#6366f133', borderRadius: 4 },
+            { label: 'Leave', data: em.map(e=>Number(e.leave)||0), backgroundColor: '#ec4899cc', borderRadius: 4 },
           ]
         },
         options: { responsive:true, maintainAspectRatio:false, plugins: pTop,
@@ -1963,56 +2133,169 @@ footer strong { color: var(--muted); font-weight: 600; }
     } catch(e) {}
   }
 
-  // ── ft: Tasks table ───────────────────────────────────────────────────
+  // ── ft: Tasks table (grouped by project) ─────────────────────────────
   function ft() {
     const ttb = document.getElementById('ttb'); if (!ttb) return;
-    const pf  = (document.getElementById('tps')||{}).value||'ALL';
-    const ef  = (document.getElementById('tes')||{}).value||'ALL';
-    const sf  = ((document.getElementById('tsr')||{}).value||'').toLowerCase();
+    const pf = (document.getElementById('tps')||{}).value||'ALL';
+    const ef = (document.getElementById('tes')||{}).value||'ALL';
+    const sf = ((document.getElementById('tsr')||{}).value||'').toLowerCase();
     ttb.innerHTML = '';
-    let count = 0;
-    (taskData||[]).filter(t => {
+
+    // Filter entries
+    const filtered = (taskData||[]).filter(t => {
       if (pf!=='ALL' && t.proj!==pf) return false;
       if (ef!=='ALL' && t.employee!==ef) return false;
       if (sf && !(((t.task||'')+(t.desc||'')+(t.proj||'')).toLowerCase().includes(sf))) return false;
       return true;
-    }).forEach(t => {
-      count++;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="cell-name" title="${t.proj||''}"><span class="pl plb">${t.proj||''}</span></td>
-        <td class="cell-name" style="font-weight:500;color:var(--tx2);" title="${t.task||''}">${t.task||''}</td>
-        <td class="cell-desc" style="color:var(--muted);font-size:11.5px;" title="${t.desc||''}">${t.desc||''}</td>
-        <td class="nr">${(t.hrs||0).toFixed(2)}</td>
-        <td style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${t.employee||''}">${t.employee||''}</td>
-      `;
-      ttb.appendChild(tr);
     });
-    const lbl = document.getElementById('tlbl');
-    if (lbl) lbl.innerHTML = `<span class="ptd" style="background:var(--orange)"></span>All Tasks <span style="font-size:10.5px;color:var(--muted);font-weight:500;">(${count} entries)</span>`;
 
-    // populate task/employee filter dropdowns
+    // Group by project
+    const grpMap = {};
+    filtered.forEach(t => {
+      const p = t.proj||'Unknown';
+      if (!grpMap[p]) grpMap[p] = [];
+      grpMap[p].push(t);
+    });
+    const grpList = Object.entries(grpMap).sort((a,b) => {
+      const ha = a[1].reduce((s,x)=>s+(Number(x.hrs)||0),0);
+      const hb = b[1].reduce((s,x)=>s+(Number(x.hrs)||0),0);
+      return hb - ha;
+    });
+
+    let totalCount = 0;
+    grpList.forEach(([proj, entries]) => {
+      totalCount += entries.length;
+      const projHrs = entries.reduce((s,t)=>s+(Number(t.hrs)||0),0);
+
+      // Project group header row
+      const htr = document.createElement('tr');
+      htr.className = 'proj-grp-hdr';
+      htr.dataset.grpOpen = '0';
+      htr.innerHTML = `
+        <td colspan="2" style="font-weight:600;color:var(--tx);padding:8px 10px;">
+          <span class="row-toggle">▶</span>
+          <span class="pl plb">${proj}</span>
+          <span style="font-size:10.5px;color:var(--muted);font-weight:400;margin-left:8px;">${entries.length} entr${entries.length===1?'y':'ies'}</span>
+        </td>
+        <td class="nr" style="font-weight:600;color:var(--tx2);">${projHrs.toFixed(2)}</td>
+        <td></td>
+      `;
+      htr.addEventListener('click', () => _grpToggle(htr));
+      ttb.appendChild(htr);
+
+      // Individual task entry rows — hidden by default
+      entries.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.className = 'tasks-entry-row';
+        tr.style.display = 'none';
+        tr.innerHTML = `
+          <td class="cell-name" style="font-weight:500;color:var(--tx2);" title="${t.task||''}">${t.task||''}</td>
+          <td class="cell-desc" style="color:var(--muted);font-size:11.5px;" title="${t.desc||''}">${t.desc||''}</td>
+          <td class="nr">${Number(t.hrs||0).toFixed(2)}</td>
+          <td style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${t.employee||''}">${t.employee||''}</td>
+        `;
+        ttb.appendChild(tr);
+      });
+    });
+
+    const lbl = document.getElementById('tlbl');
+    if (lbl) lbl.innerHTML = `<span class="ptd" style="background:var(--orange)"></span>All Tasks <span style="font-size:10.5px;color:var(--muted);font-weight:500;">(${totalCount} entries · ${grpList.length} projects)</span>`;
+
+    // Populate filter dropdowns (first load only)
     const tpsEl = document.getElementById('tps');
     const tesEl = document.getElementById('tes');
     if (tpsEl && tpsEl.options.length <= 1) {
       [...new Set((taskData||[]).map(t=>t.proj).filter(Boolean))].sort().forEach(p => {
-        const o = document.createElement('option'); o.value = p; o.textContent = p; tpsEl.appendChild(o);
+        const o = document.createElement('option'); o.value=p; o.textContent=p; tpsEl.appendChild(o);
       });
     }
     if (tesEl && tesEl.options.length <= 1) {
       [...new Set((taskData||[]).map(t=>t.employee).filter(Boolean))].sort().forEach(e => {
-        const o = document.createElement('option'); o.value = e; o.textContent = e; tesEl.appendChild(o);
+        const o = document.createElement('option'); o.value=e; o.textContent=e; tesEl.appendChild(o);
       });
     }
   }
 
+  function _grpToggle(htr) {
+    const isOpen = htr.dataset.grpOpen === '1';
+    const icon   = htr.querySelector('.row-toggle');
+    let nxt = htr.nextElementSibling;
+    while (nxt && nxt.classList.contains('tasks-entry-row')) {
+      nxt.style.display = isOpen ? 'none' : '';
+      nxt = nxt.nextElementSibling;
+    }
+    htr.dataset.grpOpen = isOpen ? '0' : '1';
+    if (icon) icon.style.transform = isOpen ? '' : 'rotate(90deg)';
+  }
+
+  // Employee drill-down: toggle project group → shows task rows
+  function _empProjToggle(htr) {
+    const isOpen = htr.dataset.grpEmpOpen === '1';
+    const icon   = htr.querySelector('.row-toggle');
+    let nxt = htr.nextElementSibling;
+    while (nxt && nxt.classList.contains('task-child-row')) {
+      // Also collapse desc rows under each task when closing project
+      if (isOpen && nxt.dataset.taskEmpOpen === '1') {
+        let d = nxt.nextElementSibling;
+        while (d && d.classList.contains('desc-child-row')) {
+          const rm = d; d = d.nextElementSibling; rm.remove();
+        }
+        nxt.dataset.taskEmpOpen = '0';
+        const ti = nxt.querySelector('.row-toggle'); if (ti) ti.style.transform = '';
+      }
+      nxt.style.display = isOpen ? 'none' : '';
+      nxt = nxt.nextElementSibling;
+    }
+    htr.dataset.grpEmpOpen = isOpen ? '0' : '1';
+    if (icon) icon.style.transform = isOpen ? '' : 'rotate(90deg)';
+  }
+
+  // Employee drill-down: toggle task → shows description entries
+  function _empTaskToggle(taskTr, entries) {
+    const isOpen = taskTr.dataset.taskEmpOpen === '1';
+    const icon   = taskTr.querySelector('.row-toggle');
+    let nxt = taskTr.nextElementSibling;
+    while (nxt && nxt.classList.contains('desc-child-row')) {
+      const rm = nxt; nxt = nxt.nextElementSibling; rm.remove();
+    }
+    if (isOpen) {
+      taskTr.dataset.taskEmpOpen = '0';
+      if (icon) icon.style.transform = '';
+      return;
+    }
+    taskTr.dataset.taskEmpOpen = '1';
+    if (icon) icon.style.transform = 'rotate(90deg)';
+    let ins = taskTr;
+    entries.forEach(e => {
+      const tr = document.createElement('tr');
+      tr.className = 'desc-child-row';
+      tr.innerHTML = `
+        <td colspan="2" style="padding-left:36px;font-size:11px;color:var(--muted);" title="${e.desc||''}">${e.desc||'(no description)'}</td>
+        <td class="nr" style="font-size:11px;">${Number(e.hrs||0).toFixed(2)}</td>
+      `;
+      ins.insertAdjacentElement('afterend', tr);
+      ins = tr;
+    });
+  }
+
   // ── fp: filter projects search ────────────────────────────────────────
   function fp(q) {
-    const rows = document.querySelectorAll('#ptb tr');
     const lq = q.toLowerCase();
-    rows.forEach(r => {
+    document.querySelectorAll('#ptb tr').forEach(r => {
+      if (!r.classList.contains('proj-row')) return; // skip child rows
       const name = (r.querySelector('.pname')||{}).textContent||'';
-      r.style.display = name.toLowerCase().includes(lq) ? '' : 'none';
+      const show = !lq || name.toLowerCase().includes(lq);
+      r.style.display = show ? '' : 'none';
+      if (!show && r.dataset.projOpen === '1') {
+        // Collapse this project's children
+        let nxt = r.nextElementSibling;
+        while (nxt && !nxt.classList.contains('proj-row')) {
+          const rm = nxt; nxt = nxt.nextElementSibling; rm.remove();
+        }
+        r.dataset.projOpen = '0';
+        const icon = r.querySelector('.row-toggle');
+        if (icon) icon.style.transform = '';
+      }
     });
   }
 
@@ -2043,6 +2326,17 @@ footer strong { color: var(--muted); font-weight: 600; }
       const start = new Date(y,m-1,1), end = new Date(y,m,1);
       return records.filter(r => { const d=new Date(r.date); return d>=start&&d<end; });
     }
+    if (period === 'RANGE') {
+      const from = GLOBAL_FILTERS.from ? new Date(GLOBAL_FILTERS.from) : null;
+      const to   = GLOBAL_FILTERS.to   ? new Date(GLOBAL_FILTERS.to+'T23:59:59') : null;
+      return records.filter(r => {
+        const d = new Date(r.date);
+        if (from && d < from) return false;
+        if (to   && d > to)   return false;
+        return true;
+      });
+    }
+    if (period === 'ALL') return records;
     const months = period==='6M'?6:3;
     const start = new Date(now); start.setMonth(start.getMonth()-months);
     return records.filter(r => new Date(r.date)>=start);
@@ -2074,7 +2368,7 @@ footer strong { color: var(--muted); font-weight: 600; }
 
 <!-- ══════════════════════════ GLOBAL FILTERS ══════════════════════════ -->
 <script>
-  const GLOBAL_FILTERS = { period:'ALL', month:null, employee:'ALL', project:'ALL', billableOnly:false };
+  const GLOBAL_FILTERS = { period:'ALL', month:null, from:null, to:null, employee:'ALL', project:'ALL', billableOnly:false };
 
   function populateGlobalSelectors() {
     const ge = document.getElementById('global-employee');
@@ -2089,20 +2383,35 @@ footer strong { color: var(--muted); font-weight: 600; }
   }
 
   async function applyGlobalFilters() {
-    GLOBAL_FILTERS.period    = document.getElementById('global-period').value;
-    GLOBAL_FILTERS.month     = GLOBAL_FILTERS.period === 'MONTH'
-      ? (document.getElementById('global-month').value || null)
-      : null;
-    GLOBAL_FILTERS.employee  = document.getElementById('global-employee').value;
-    GLOBAL_FILTERS.project   = document.getElementById('global-project').value;
-    GLOBAL_FILTERS.billableOnly = document.getElementById('global-billable').checked;
+    GLOBAL_FILTERS.period   = document.getElementById('global-period').value;
+    GLOBAL_FILTERS.month    = GLOBAL_FILTERS.period === 'MONTH'
+      ? (document.getElementById('global-month').value || null) : null;
+    GLOBAL_FILTERS.from     = GLOBAL_FILTERS.period === 'RANGE'
+      ? (document.getElementById('global-from').value || null) : null;
+    GLOBAL_FILTERS.to       = GLOBAL_FILTERS.period === 'RANGE'
+      ? (document.getElementById('global-to').value || null) : null;
+
+    if (GLOBAL_FILTERS.period === 'RANGE' && !GLOBAL_FILTERS.from && !GLOBAL_FILTERS.to) {
+      const rangeErr = document.getElementById('range-err');
+      if (rangeErr) { rangeErr.style.display = 'inline'; setTimeout(() => { rangeErr.style.display = 'none'; }, 3000); }
+      return;
+    }
+    document.getElementById('range-err') && (document.getElementById('range-err').style.display = 'none');
+
+    GLOBAL_FILTERS.employee = document.getElementById('global-employee').value;
+    GLOBAL_FILTERS.project  = document.getElementById('global-project').value;
+    // BILLABLE FILTER — hidden, uncomment when billable filter is restored
+    // GLOBAL_FILTERS.billableOnly = document.getElementById('global-billable').checked;
+    GLOBAL_FILTERS.billableOnly = false;
 
     const params = new URLSearchParams();
     params.set('period', GLOBAL_FILTERS.period||'ALL');
     if (GLOBAL_FILTERS.month) params.set('month', GLOBAL_FILTERS.month);
+    if (GLOBAL_FILTERS.from)  params.set('from',  GLOBAL_FILTERS.from);
+    if (GLOBAL_FILTERS.to)    params.set('to',    GLOBAL_FILTERS.to);
     if (GLOBAL_FILTERS.employee&&GLOBAL_FILTERS.employee!=='ALL') params.set('employee', GLOBAL_FILTERS.employee);
     if (GLOBAL_FILTERS.project&&GLOBAL_FILTERS.project!=='ALL')   params.set('project',  GLOBAL_FILTERS.project);
-    if (GLOBAL_FILTERS.billableOnly) params.set('billable', 'true');
+    // if (GLOBAL_FILTERS.billableOnly) params.set('billable', 'true');
 
     const overlay = document.getElementById('loading-overlay');
     if (overlay) overlay.classList.add('show');
@@ -2133,9 +2442,13 @@ footer strong { color: var(--muted); font-weight: 600; }
   function resetGlobalFilters() {
     document.getElementById('global-period').value = 'ALL';
     document.getElementById('global-month').style.display = 'none';
+    document.getElementById('global-range-wrap').style.display = 'none';
+    document.getElementById('global-from').value = '';
+    document.getElementById('global-to').value   = '';
     document.getElementById('global-employee').value = 'ALL';
     document.getElementById('global-project').value  = 'ALL';
-    document.getElementById('global-billable').checked = false;
+    // BILLABLE FILTER — hidden, uncomment when global-billable is restored
+    // document.getElementById('global-billable').checked = false;
     applyGlobalFilters();
   }
 
@@ -2156,16 +2469,23 @@ footer strong { color: var(--muted); font-weight: 600; }
   }
 
   document.getElementById('global-period').addEventListener('change', e => {
-    const monthSel = document.getElementById('global-month');
-    if (e.target.value === 'MONTH') {
-      buildMonthOptions();
-      monthSel.style.display = 'inline-block';
-    } else {
-      monthSel.style.display = 'none';
-    }
+    const monthSel  = document.getElementById('global-month');
+    const rangeWrap = document.getElementById('global-range-wrap');
+    const val = e.target.value;
+    monthSel.style.display  = val === 'MONTH' ? 'inline-block' : 'none';
+    rangeWrap.style.display = val === 'RANGE' ? 'flex' : 'none';
+    if (val === 'MONTH') buildMonthOptions();
   });
   document.getElementById('global-apply').addEventListener('click', applyGlobalFilters);
   document.getElementById('global-reset').addEventListener('click', resetGlobalFilters);
+
+  function _onDateChange() {
+    const from = document.getElementById('global-from').value;
+    const to   = document.getElementById('global-to').value;
+    if (from && to) applyGlobalFilters();
+  }
+  document.getElementById('global-from').addEventListener('change', _onDateChange);
+  document.getElementById('global-to').addEventListener('change', _onDateChange);
 
   window.addEventListener('load', async () => {
     document.getElementById('global-period').value = '3M';
@@ -2215,15 +2535,55 @@ footer strong { color: var(--muted); font-weight: 600; }
       if (data.error) throw new Error(data.error);
       document.getElementById('dde-name').textContent = data.name||'—';
       document.getElementById('dde-tot').textContent  = data.total??'—';
-      document.getElementById('dde-bl').textContent   = data.bill??'—';
+      // EMPLOYEE BILLABLE — hidden, uncomment when dde-bl is restored
+      // document.getElementById('dde-bl').textContent   = data.bill??'—';
       document.getElementById('dde-pr').textContent   = (data.projects||[]).length||'—';
       document.getElementById('dde-tk').textContent   = (data.tasks||[]).length||'—';
+      // Group tasks by project name
+      const empProjMap = {};
+      (data.tasks||[]).forEach(t => {
+        const p = t.proj||'Unknown';
+        if (!empProjMap[p]) empProjMap[p] = { hrs:0, tasks:{} };
+        empProjMap[p].hrs += Number(t.hrs)||0;
+        const tk = t.task||'—';
+        if (!empProjMap[p].tasks[tk]) empProjMap[p].tasks[tk] = { hrs:0, entries:[] };
+        empProjMap[p].tasks[tk].hrs += Number(t.hrs)||0;
+        empProjMap[p].tasks[tk].entries.push(t);
+      });
+
       const tb = document.querySelector('#dde-pt tbody');
       tb.innerHTML = '';
-      (data.tasks||[]).forEach(t => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td class="cell-name" title="${t.proj}"><span class="pl plb">${t.proj}</span></td><td class="cell-name" title="${t.task}">${t.task}</td><td class="cell-desc" style="color:var(--muted);font-size:11px;" title="${t.desc}">${t.desc}</td><td class="nr">${t.hrs}</td>`;
-        tb.appendChild(tr);
+      Object.entries(empProjMap).sort((a,b)=>b[1].hrs-a[1].hrs).forEach(([proj, pdata]) => {
+        // Project group header
+        const htr = document.createElement('tr');
+        htr.className = 'proj-grp-hdr';
+        htr.dataset.grpEmpOpen = '0';
+        htr.innerHTML = `
+          <td colspan="2" style="font-weight:600;color:var(--tx);padding:6px 8px;">
+            <span class="row-toggle">▶</span>
+            <span class="pl plb">${proj}</span>
+          </td>
+          <td class="nr" style="font-weight:600;color:var(--tx2);">${pdata.hrs.toFixed(2)}</td>
+        `;
+        htr.addEventListener('click', () => _empProjToggle(htr));
+        tb.appendChild(htr);
+
+        // Task rows (hidden by default)
+        Object.entries(pdata.tasks).sort((a,b)=>b[1].hrs-a[1].hrs).forEach(([tname, tdata]) => {
+          const ttr = document.createElement('tr');
+          ttr.className = 'task-child-row';
+          ttr.dataset.taskEmpOpen = '0';
+          ttr.style.display = 'none';
+          ttr.innerHTML = `
+            <td style="padding-left:20px;font-size:12px;cursor:pointer;">
+              <span class="row-toggle" style="font-size:9px;">▶</span>${tname}
+            </td>
+            <td></td>
+            <td class="nr" style="font-size:12px;color:var(--muted);">${tdata.hrs.toFixed(2)}</td>
+          `;
+          ttr.querySelector('td:first-child').addEventListener('click', () => _empTaskToggle(ttr, tdata.entries));
+          tb.appendChild(ttr);
+        });
       });
       openDrill('dd-emp');
     } catch(e) { console.error('showEmployee', e); }
@@ -2266,13 +2626,7 @@ footer strong { color: var(--muted); font-weight: 600; }
   }
 
   function attachDrillHandlers() {
-    const ptb = document.getElementById('ptb');
-    if (ptb) {
-      ptb.querySelectorAll('tr').forEach(tr => {
-        const nd = tr.querySelectorAll('td')[1];
-        if (nd) { tr.style.cursor='pointer'; tr.onclick = () => showProject(nd.textContent.trim()); }
-      });
-    }
+    // Projects table uses inline expand (rpt() attaches its own listeners) — no handler needed here
     const etb = document.getElementById('etb');
     if (etb) {
       etb.querySelectorAll('tr').forEach(tr => {
