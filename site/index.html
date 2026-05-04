@@ -1207,7 +1207,7 @@ footer strong { color: var(--muted); font-weight: 600; }
       </div>
     </div>
 
-    <!-- Charts row 1 — Project Distribution + Employee Hours -->
+    <!-- Charts row 1 — Employee Hours + Employee Ranking -->
     <div class="g2">
       <!-- PROJECTS BY BILLABLE HRS CHART — hidden, uncomment to restore
       <div class="pn">
@@ -1215,10 +1215,12 @@ footer strong { color: var(--muted); font-weight: 600; }
         <div class="cw"><canvas id="ov-pb"></canvas></div>
       </div>
       -->
+      <!-- PROJECT DISTRIBUTION DONUT — hidden, uncomment to restore
       <div class="pn">
         <div class="pt"><span class="ptd" style="background:var(--accent)"></span>Project Distribution</div>
         <div class="cw"><canvas id="ov-pd"></canvas></div>
       </div>
+      -->
       <div class="pn">
         <div class="pt"><span class="ptd" style="background:var(--accent-3)"></span>Employee Hours — Total vs Leave</div>
         <div class="cw"><canvas id="ov-eg"></canvas></div>
@@ -1229,9 +1231,13 @@ footer strong { color: var(--muted); font-weight: 600; }
         <div class="cw"><canvas id="ov-bl"></canvas></div>
       </div>
       -->
+      <div class="pn">
+        <div class="pt"><span class="ptd" style="background:var(--emerald)"></span>Employee Ranking</div>
+        <div class="cw-sm"><canvas id="ov-er"></canvas></div>
+      </div>
     </div>
 
-    <!-- Charts row 2 — Employee Ranking + Tasks per Employee -->
+    <!-- Charts row 2 — Tasks per Employee (full width) -->
     <div class="g2">
       <!-- TEAM HOURS SPLIT CHART — hidden, uncomment to restore
       <div class="pn">
@@ -1239,10 +1245,6 @@ footer strong { color: var(--muted); font-weight: 600; }
         <div class="cw-sm"><canvas id="ov-sd"></canvas></div>
       </div>
       -->
-      <div class="pn">
-        <div class="pt"><span class="ptd" style="background:var(--emerald)"></span>Employee Ranking</div>
-        <div class="cw-sm"><canvas id="ov-er"></canvas></div>
-      </div>
       <div class="pn">
         <div class="pt"><span class="ptd" style="background:var(--accent)"></span>Tasks per Employee</div>
         <div class="cw-sm"><canvas id="ov-te"></canvas></div>
@@ -2036,19 +2038,19 @@ footer strong { color: var(--muted); font-weight: 600; }
       });
     } catch(e) {}
 
-    // Project distribution doughnut
-    try {
-      const topD = (projects||[]).slice(0,6);
-      drawChart('ov-pd', {
-        type: 'doughnut',
-        data: {
-          labels: topD.map(x=>x.name),
-          datasets: [{ data: topD.map(x=>Number(x.hrs||x.total||0)), backgroundColor: PALETTE.slice(0,topD.length),
-            borderWidth: 2, borderColor: isDark()?'#161d2e':'#fff' }]
-        },
-        options: { responsive:true, maintainAspectRatio:false, plugins: getPlugins('right'), cutout: '62%' }
-      });
-    } catch(e) {}
+    // Project distribution doughnut — hidden, uncomment to restore
+    // try {
+    //   const topD = (projects||[]).slice(0,6);
+    //   drawChart('ov-pd', {
+    //     type: 'doughnut',
+    //     data: {
+    //       labels: topD.map(x=>x.name),
+    //       datasets: [{ data: topD.map(x=>Number(x.hrs||x.total||0)), backgroundColor: PALETTE.slice(0,topD.length),
+    //         borderWidth: 2, borderColor: isDark()?'#161d2e':'#fff' }]
+    //     },
+    //     options: { responsive:true, maintainAspectRatio:false, plugins: getPlugins('right'), cutout: '62%' }
+    //   });
+    // } catch(e) {}
 
     // Employee hrs: total vs leave
     try {
