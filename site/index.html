@@ -598,6 +598,7 @@ main {
 ═══════════════════════════════════════════ */
 .cw    { height: 240px; position: relative; }
 .cw-sm { height: 200px; position: relative; }
+.cw-lg { height: 340px; position: relative; }
 
 /* ═══════════════════════════════════════════
    EXPANDABLE TABLE ROWS
@@ -1207,7 +1208,13 @@ footer strong { color: var(--muted); font-weight: 600; }
       </div>
     </div>
 
-    <!-- Charts row 1 — Employee Hours + Employee Ranking -->
+    <!-- Charts row 1 — All Projects by Hours (full width) -->
+    <div class="pn" style="margin-bottom:18px;">
+      <div class="pt"><span class="ptd" style="background:var(--accent)"></span>Projects by Hours</div>
+      <div class="cw-lg"><canvas id="ov-ph"></canvas></div>
+    </div>
+
+    <!-- Charts row 2 — Employee Ranking + Tasks per Employee -->
     <div class="g2">
       <!-- PROJECTS BY BILLABLE HRS CHART — hidden, uncomment to restore
       <div class="pn">
@@ -1221,24 +1228,18 @@ footer strong { color: var(--muted); font-weight: 600; }
         <div class="cw"><canvas id="ov-pd"></canvas></div>
       </div>
       -->
+      <!-- EMPLOYEE HOURS TOTAL VS LEAVE — hidden, uncomment to restore
       <div class="pn">
         <div class="pt"><span class="ptd" style="background:var(--accent-3)"></span>Employee Hours — Total vs Leave</div>
         <div class="cw"><canvas id="ov-eg"></canvas></div>
       </div>
+      -->
       <!-- INDIVIDUAL BILLABILITY CHART — hidden, uncomment to restore
       <div class="pn">
         <div class="pt"><span class="ptd" style="background:var(--orange)"></span>Individual Billability Rate</div>
         <div class="cw"><canvas id="ov-bl"></canvas></div>
       </div>
       -->
-      <div class="pn">
-        <div class="pt"><span class="ptd" style="background:var(--emerald)"></span>Employee Ranking</div>
-        <div class="cw-sm"><canvas id="ov-er"></canvas></div>
-      </div>
-    </div>
-
-    <!-- Charts row 2 — Tasks per Employee (full width) -->
-    <div class="g2">
       <!-- TEAM HOURS SPLIT CHART — hidden, uncomment to restore
       <div class="pn">
         <div class="pt"><span class="ptd" style="background:var(--amber)"></span>Team Hours Split</div>
@@ -1246,8 +1247,12 @@ footer strong { color: var(--muted); font-weight: 600; }
       </div>
       -->
       <div class="pn">
-        <div class="pt"><span class="ptd" style="background:var(--accent)"></span>Tasks per Employee</div>
-        <div class="cw-sm"><canvas id="ov-te"></canvas></div>
+        <div class="pt"><span class="ptd" style="background:var(--emerald)"></span>Employee Ranking</div>
+        <div class="cw-sm"><canvas id="ov-er"></canvas></div>
+      </div>
+      <div class="pn">
+        <div class="pt"><span class="ptd" style="background:var(--accent)"></span>Projects per Employee</div>
+        <div class="cw"><canvas id="ov-te"></canvas></div>
       </div>
     </div>
 
@@ -2052,22 +2057,54 @@ footer strong { color: var(--muted); font-weight: 600; }
     //   });
     // } catch(e) {}
 
-    // Employee hrs: total vs leave
+    // Top 10 projects by hours (horizontal bar, full width, leave excluded)
     try {
-      const em = employees||[];
-      drawChart('ov-eg', {
+      const leaveKw = (staffConfig.leave_tasks||[]).map(k=>k.toLowerCase());
+      const isLeaveProj = name => leaveKw.some(kw => name.toLowerCase().includes(kw));
+      const projMap = {};
+      (taskData||[]).forEach(t => {
+        const p = t.proj||'Unknown';
+        if (isLeaveProj(p)) return;
+        projMap[p] = (projMap[p]||0) + (Number(t.hrs)||0);
+      });
+      const top10 = Object.entries(projMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+      const d = chartDefaults();
+      drawChart('ov-ph', {
         type: 'bar',
         data: {
-          labels: em.map(e=>e.short||e.name),
-          datasets: [
-            { label: 'Total', data: em.map(e=>Number(e.total)||0), backgroundColor: '#6366f133', borderRadius: 4 },
-            { label: 'Leave', data: em.map(e=>Number(e.leave)||0), backgroundColor: '#ec4899cc', borderRadius: 4 },
-          ]
+          labels: top10.map(([n])=>n),
+          datasets: [{ label: 'Hours', data: top10.map(([,h])=>+h.toFixed(2)),
+            backgroundColor: top10.map((_,i)=>(PALETTE[i%PALETTE.length]||'#6366f1')+'cc'),
+            borderRadius: 4 }]
         },
-        options: { responsive:true, maintainAspectRatio:false, plugins: pTop,
-          scales: { ...getScales(true) } }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: pTop,
+          scales: {
+            x: { ticks: { color: d.tickColor, font: { family:'Inter', size:11 }, maxRotation: 35 }, grid: { display: false } },
+            y: { beginAtZero: true, ticks: { color: d.tickColor, font: { family:'Inter', size:11 } }, grid: { color: d.gridColor } }
+          }
+        }
       });
     } catch(e) {}
+
+    // Employee hrs: total vs leave — hidden, uncomment to restore
+    // try {
+    //   const em = employees||[];
+    //   drawChart('ov-eg', {
+    //     type: 'bar',
+    //     data: {
+    //       labels: em.map(e=>e.short||e.name),
+    //       datasets: [
+    //         { label: 'Total', data: em.map(e=>Number(e.total)||0), backgroundColor: '#6366f133', borderRadius: 4 },
+    //         { label: 'Leave', data: em.map(e=>Number(e.leave)||0), backgroundColor: '#ec4899cc', borderRadius: 4 },
+    //       ]
+    //     },
+    //     options: { responsive:true, maintainAspectRatio:false, plugins: pTop,
+    //       scales: { ...getScales(true) } }
+    //   });
+    // } catch(e) {}
 
     // Individual billability
     try {
@@ -2120,17 +2157,57 @@ footer strong { color: var(--muted); font-weight: 600; }
       });
     } catch(e) {}
 
-    // Tasks per employee
+    // Projects per employee — stacked bar
     try {
-      const topT = (employees||[]).slice(0,8);
+      const leaveKw = (staffConfig.leave_tasks||[]).map(k=>k.toLowerCase());
+      const isLeaveProj = name => leaveKw.some(kw => name.toLowerCase().includes(kw));
+
+      // Build emp → project → hours from taskData
+      const empProjHrs = {};
+      const projTotals = {};
+      (taskData||[]).forEach(t => {
+        const emp  = t.employee||'Unknown';
+        const proj = t.proj||'Unknown';
+        if (isLeaveProj(proj)) return;
+        if (!empProjHrs[emp]) empProjHrs[emp] = {};
+        empProjHrs[emp][proj] = (empProjHrs[emp][proj]||0) + (Number(t.hrs)||0);
+        projTotals[proj] = (projTotals[proj]||0) + (Number(t.hrs)||0);
+      });
+
+      // Employee order: same as employees array (sorted by total hrs)
+      const empList = (employees||[]).map(e=>e.name).filter(n=>empProjHrs[n]);
+      const empLabels = empList.map(n => { const e=(employees||[]).find(e=>e.name===n); return e?(e.short||n):n; });
+
+      // Top 8 projects by total hrs; rest → "Other"
+      const top8Projs = Object.entries(projTotals).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([n])=>n);
+      const top8Set   = new Set(top8Projs);
+
+      const datasets = top8Projs.map((proj,i) => ({
+        label: proj,
+        data:  empList.map(emp => +(empProjHrs[emp]?.[proj]||0).toFixed(2)),
+        backgroundColor: (PALETTE[i%PALETTE.length]||'#6366f1')+'cc',
+        borderRadius: 2,
+        stack: 'p'
+      }));
+
+      const otherData = empList.map(emp =>
+        +Object.entries(empProjHrs[emp]||{}).filter(([p])=>!top8Set.has(p)).reduce((s,[,h])=>s+h,0).toFixed(2)
+      );
+      if (otherData.some(v=>v>0))
+        datasets.push({ label:'Other', data:otherData, backgroundColor:'#94a3b8cc', borderRadius:2, stack:'p' });
+
+      const d = chartDefaults();
       drawChart('ov-te', {
         type: 'bar',
-        data: {
-          labels: topT.map(e=>e.short||e.name),
-          datasets: [{ label: 'Tasks', data: topT.map(e=>Number(e.tasks)||0),
-            backgroundColor: '#8b5cf6cc', borderRadius: 5 }]
-        },
-        options: { responsive:true, maintainAspectRatio:false, plugins: pTop, scales: getScales() }
+        data: { labels: empLabels, datasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: getPlugins('right'),
+          scales: {
+            x: { stacked:true, ticks:{ color:d.tickColor, font:{family:'Inter',size:10} }, grid:{ display:false } },
+            y: { stacked:true, beginAtZero:true, ticks:{ color:d.tickColor, font:{family:'Inter',size:10} }, grid:{ color:d.gridColor } }
+          }
+        }
       });
     } catch(e) {}
   }
