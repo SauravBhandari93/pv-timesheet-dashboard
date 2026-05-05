@@ -59,15 +59,21 @@ Deno.serve(async (req) => {
   if (emp  !== "ALL") query = query.eq("employee", emp);
   if (proj !== "ALL") query = query.eq("project",  proj);
 
-  const { data: records, error } = await query;
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: cors,
-    });
+  const allRecords: any[] = [];
+  let rangeFrom = 0;
+  const pageSize = 1000;
+  while (true) {
+    const { data: batch, error } = await query.range(rangeFrom, rangeFrom + pageSize - 1);
+    if (error) {
+      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: cors });
+    }
+    if (!batch || batch.length === 0) break;
+    allRecords.push(...batch);
+    if (batch.length < pageSize) break;
+    rangeFrom += pageSize;
   }
 
-  const rows = records ?? [];
+  const rows = allRecords;
 
   const isNonBillable = (r: any) =>
     (cfg.non_billable_tasks as string[]).some((kw) =>
